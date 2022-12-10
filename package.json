@@ -1,0 +1,25 @@
+{
+  "name": "fedifollow",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeFoodPixels/fedifollow.git"
+  },
+  "author": "Luke Bonaccorsi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CodeFoodPixels/fedifollow/issues"
+  },
+  "homepage": "https://github.com/CodeFoodPixels/fedifollow#readme",
+  "devDependencies": {
+    "jest": "^29.3.1"
+  },
+  "dependencies": {
+    "mime-types": "^2.1.35"
+  }
+}
