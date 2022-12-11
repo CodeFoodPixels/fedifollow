@@ -3,25 +3,25 @@ const path = require("path");
 const request = require("./request");
 const response = require("./response");
 
-function removeTrailingSlashes(str) {
-  if (typeof str !== "string") {
-    return str;
-  }
-
-  let i = str.length;
-  while (str[--i] === "/");
-  return str.slice(0, i + 1);
-}
-
-function cleanRoute(route) {
-  return removeTrailingSlashes(route).replace(/^\//, "");
-}
-
 function createServer() {
   const routes = {
     GET: {},
     POST: {},
   };
+
+  function removeTrailingSlashes(str) {
+    if (typeof str !== "string") {
+      return str;
+    }
+
+    let i = str.length;
+    while (str[--i] === "/");
+    return str.slice(0, i + 1);
+  }
+
+  function cleanRoute(route) {
+    return removeTrailingSlashes(route).replace(/^\//, "");
+  }
 
   const server = http.createServer({
     IncomingMessage: request,
@@ -103,12 +103,16 @@ function createServer() {
     });
   }
 
-  return {
+  const methods = {
     listen: server.listen.bind(server),
     get: addRoute.bind(undefined, "GET"),
     post: addRoute.bind(undefined, "POST"),
+    route: addRoute,
     static: addStaticRoute,
+    use: (cb) => cb(methods),
   };
+
+  return methods;
 }
 
 module.exports = createServer;

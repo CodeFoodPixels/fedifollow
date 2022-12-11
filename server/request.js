@@ -6,14 +6,10 @@ class Request extends http.IncomingMessage {
     this.body = "";
   }
   get requestUrl() {
-    return new URL(getRequestURL(this));
+    const secure =
+      this.socket?.encrypted || this.headers?.["x-forwarded-proto"] === "https";
+    return new URL(req.url, `http${secure ? "s" : ""}://${this.headers.host}`);
   }
-}
-
-function getRequestURL(req) {
-  var secure =
-    req.socket?.encrypted || req.headers?.["x-forwarded-proto"] === "https";
-  return `http${secure ? "s" : ""}://${req.headers.host}${req.url}`;
 }
 
 module.exports = Request;
