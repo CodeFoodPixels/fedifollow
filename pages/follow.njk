@@ -1,0 +1,18 @@
+{% include "includes/user.njk" %}
+<div class="text">
+  <p>
+    Because
+    <code class="text__server">{{ server }}</code>
+    might not be the server where you're registered, we need to redirect you to your home server first.
+  </p>
+  <p>Please enter your handle below and you'll be redirected.</p>
+</div>
+<form method="POST" action="/follow">
+  <div class="follow__wrapper">
+    <label class="follow__label" for="follower">Your handle:</label>
+    <input class="follow__input" id="follower" type="text" name="follower" {% if follower %} value="{{ follower }}" {% endif %}/>
+    <input type="hidden" name="toFollow" value="{{ toFollow }}"/>
+    <label class="follow__label"><input type="checkbox" name="remember" class="follow__checkbox" {% if remember %} checked="checked" {% endif %}/> Remember me (uses cookies)</label>
+    <button class="follow__submit" type="submit">Proceed to follow</button>
+  </div>
+</form>

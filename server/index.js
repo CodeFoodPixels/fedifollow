@@ -39,9 +39,11 @@ function createServer() {
     const pathName = cleanRoute(req.requestUrl.pathname);
 
     req.on("data", (chunk) => {
-      req.body += chunk.toString(); // convert Buffer to string
+      req.body += chunk.toString();
     });
     req.on("end", async () => {
+      req.parseBody();
+
       const pathParts = pathName.split("/");
 
       let currPath = routes[req.method.toUpperCase()];
@@ -91,14 +93,14 @@ function createServer() {
   function addStaticRoute(route, staticPath) {
     const cleanedRoute = cleanRoute(route);
 
-    addRoute("GET", `${cleanedRoute}/*`, (req, res) => {
-      const replacePattern = new RegExp(`^${cleanedRoute}/`);
+    addRoute("GET", `/${cleanedRoute}/*`, (req, res) => {
+      const replacePattern = new RegExp(`^/${cleanedRoute}/`);
 
       const pathName = path.join(
         staticPath,
         ...req.requestUrl.pathname.replace(replacePattern, "").split("/")
       );
-      debugger;
+
       res.sendFile(pathName);
     });
   }

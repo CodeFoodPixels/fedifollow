@@ -1,8 +1,12 @@
 const path = require("path");
+const follow = require("./follow");
 
 module.exports = (server) => {
   server.get("/", (req, res) => {
-    console.log(path.join("..", "public", "index.html"));
-    res.sendFile(path.join("..", "public", "index.html"));
+    res.render("index.njk", {}, "layout.njk");
   });
+
+  server.use(follow);
+
+  server.static("/public", path.join(__dirname, "..", "public"));
 };

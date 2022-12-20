@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>
+      {% if title %}
+        {{ title }} -
+      {% endif %}Fedifollow</title>
+    <meta name="description" content=""/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/public/styles.css"/>
+  </head>
+  <body>
+    <header class="header">
+      <h1 class="header__logo">
+        <a href="/" class="header__logo-link">FediFollow</a>
+      </h1>
+    </header>
+    <main class="content" id="main-content" tabindex="-1">
+      {{ content | safe }}
+    </main>
+    <footer class="footer">
+      <p>
+        FediFollow is an open source project by
+        <a href="https://lukeb.co.uk" target="_blank">Luke Bonaccorsi</a>
+      </p>
+      <p>
+        <a href="https://github.com/codefoodpixels/fedifollow" target="_blank">You can view the source on GitHub</a>
+      </p>
+    </footer>
+  </body>
+</html>

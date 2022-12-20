@@ -1,0 +1,11 @@
+<h2>You want to follow:</h2>
+<div class="user">
+  {% if image %}
+    <img class="user__header" src="{{ image }}"/>
+  {% endif %}
+  {% if icon %}
+    <img class="user__icon" src="{{ icon }}"/>
+  {% endif %}
+  <span class="user__name">{{ name }}</span>
+  {{ displayHandle }}
+</div>

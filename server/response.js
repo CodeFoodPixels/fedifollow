@@ -1,7 +1,12 @@
 const http = require("http");
 const path = require("path");
-const mime = require("mime-types");
 const fs = require("fs").promises;
+const mime = require("mime-types");
+const nunjucks = require("nunjucks");
+
+nunjucks.configure(path.join(__dirname, "..", "pages"), {
+  noCache: process.env.dev ? true : false,
+});
 
 class Response extends http.ServerResponse {
   constructor() {
@@ -9,11 +14,11 @@ class Response extends http.ServerResponse {
   }
 
   async sendFile(filePath) {
-    const realPath = path.join(__dirname, filePath);
-    const extname = path.extname(realPath);
+    const extname = path.extname(filePath);
 
     try {
-      const content = await fs.readFile(realPath);
+      let content = await fs.readFile(filePath);
+
       this.setHeader("Content-Type", mime.lookup(extname));
       this.end(content);
     } catch (error) {
@@ -23,7 +28,6 @@ class Response extends http.ServerResponse {
 
         return this.end("Not found");
       }
-
       this.statusCode = 500;
       this.setHeader("Content-Type", "text/html");
       return this.end("Server error");
@@ -38,6 +42,17 @@ class Response extends http.ServerResponse {
       this.setHeader("Content-Type", "text/html");
       this.end(data);
     }
+  }
+
+  render(template, locals = {}, layout) {
+    let rendered = nunjucks.render(template, locals);
+
+    if (layout) {
+      rendered = nunjucks.render(layout, { ...locals, content: rendered });
+    }
+
+    this.setHeader("Content-Type", "text/html");
+    this.end(rendered);
   }
 }
 
