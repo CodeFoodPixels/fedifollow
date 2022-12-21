@@ -1,5 +1,11 @@
 const https = require("https");
+const { XMLParser } = require("fast-xml-parser");
 
+const URIs = [
+  { URI: "webfinger", type: "JSON" },
+  { URI: "host-meta.json", type: "JSON" },
+  { URI: "host-meta", type: "XML" },
+];
 function isUrl(url) {
   try {
     new URL(url);
@@ -42,15 +48,30 @@ async function webfinger(user) {
   }
 
   const processedUser = processUser(user);
+  for (let i = 0; i < URIs.length; i++) {
+    const url = `https://${processedUser.host}/.well-known/${
+      URIs[i].URI
+    }?resource=${processedUser.scheme}${encodeURIComponent(
+      processedUser.user
+    )}`;
 
-  const url = `https://${processedUser.host}/.well-known/webfinger?resource=${
-    processedUser.scheme
-  }${encodeURIComponent(processedUser.user)}`;
+    try {
+      const req = await makeRequest(url, URIs[i].type);
 
-  return makeRequest(url);
+      return req;
+    } catch (e) {
+      if (e.message === "REQUEST_ERROR" && e.status === 404) {
+        continue;
+      }
+
+      throw e;
+    }
+  }
+
+  throw { message: "REQUEST_ERROR" };
 }
 
-function makeRequest(url) {
+function makeRequest(url, responseType) {
   return new Promise((resolve, reject) => {
     https
       .get(url, (res) => {
@@ -75,9 +96,18 @@ function makeRequest(url) {
 
         res.on("end", () => {
           try {
-            resolve(JSON.parse(data));
+            if (responseType === "JSON") {
+              resolve(JSON.parse(data));
+            } else {
+              const XML = new XMLParser({
+                ignoreAttributes: false,
+                preserveOrder: true,
+              });
+              console.log(XML.parse(data, true));
+              resolve(XML.parse(data, true));
+            }
           } catch (e) {
-            reject({ message: "INVALID_JSON" });
+            reject({ message: "INVALID_DATA_FORMAT" });
           }
         });
       })

@@ -31,7 +31,7 @@ async function activityPubProfile(url) {
           try {
             resolve(JSON.parse(data));
           } catch (e) {
-            reject({ message: "INVALID_JSON" });
+            reject({ message: "INVALID_DATA_FORMAT" });
           }
         });
       })

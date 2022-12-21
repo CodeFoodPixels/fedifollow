@@ -13,7 +13,7 @@ function handleError(message, user, res) {
       `Sorry, there was an error trying to get to the server for "${user}"`,
       res
     );
-  } else if (message === "INVALID_JSON") {
+  } else if (message === "INVALID_DATA_FORMAT") {
     renderError(
       500,
       `Sorry, there was an error trying process the data returned from the server for "${user}"`,
