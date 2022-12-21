@@ -1,4 +1,5 @@
 const http = require("http");
+const { normalize } = require("path");
 const path = require("path");
 const request = require("./request");
 const response = require("./response");
@@ -47,6 +48,13 @@ function createServer() {
       const pathParts = pathName.split("/");
 
       let currPath = routes[req.method.toUpperCase()];
+
+      if (!currPath && req.method.toUpperCase() === "HEAD") {
+        currPath = routes["GET"];
+      } else if (!currPath) {
+        return notFound(res);
+      }
+
       for (let i = 0; i < pathParts.length; i++) {
         const part = pathParts[i];
         if (currPath[`/${part}`] && i < pathParts.length - 1) {
@@ -66,14 +74,18 @@ function createServer() {
         if (currPath["/*"]) {
           await currPath["/*"].handler(req, res);
           break;
-        } else {
-          res.statusCode = 404;
-          res.end("Not found");
         }
+
+        notFound(res);
         break;
       }
     });
   });
+
+  function notFound(res) {
+    res.statusCode = 404;
+    res.render("404.njk", { title: "Not found" }, "layout.njk");
+  }
 
   function addRoute(method, route, handler) {
     const cleanedRoute = cleanRoute(route);
