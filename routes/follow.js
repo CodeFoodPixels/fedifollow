@@ -1,4 +1,5 @@
 const activityPubProfile = require("../activityPubProfile");
+const Webfinger = require("../webfinger");
 const webfinger = require("../webfinger");
 const handleError = require("./error");
 
@@ -10,8 +11,8 @@ module.exports = function follow(server) {
       if (!toFollow) {
         throw { message: "NO_USER" };
       }
-
-      const user = await webfinger(toFollow);
+      const webfinger = new Webfinger(toFollow);
+      const user = await webfinger.query();
       const canonical = user?.links?.find(
         (link) => link.type === "application/activity+json"
       )?.href;
