@@ -1,5 +1,5 @@
 const activityPubProfile = require("../activityPubProfile");
-const webfinger = require("../webfinger");
+const Webfinger = require("../webfinger");
 const handleError = require("./error");
 
 module.exports = function follow(server) {
@@ -10,8 +10,8 @@ module.exports = function follow(server) {
       if (!toFollow) {
         throw { message: "NO_USER" };
       }
-
-      const user = await webfinger(toFollow);
+      const webfinger = new Webfinger(toFollow);
+      const user = await webfinger.query();
       const canonical = user?.links?.find(
         (link) => link.type === "application/activity+json"
       )?.href;
@@ -56,7 +56,8 @@ module.exports = function follow(server) {
   server.post("/follow", async (req, res) => {
     const body = req.body;
     try {
-      const user = await webfinger(body.follower);
+      const webfinger = new Webfinger(body.follower);
+      const user = await webfinger.query();
       const template = user?.links?.find(
         (link) => link.rel === "http://ostatus.org/schema/1.0/subscribe"
       )?.template;
