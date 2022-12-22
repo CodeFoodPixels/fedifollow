@@ -1,6 +1,5 @@
 const activityPubProfile = require("../activityPubProfile");
 const Webfinger = require("../webfinger");
-const webfinger = require("../webfinger");
 const handleError = require("./error");
 
 module.exports = function follow(server) {
@@ -57,7 +56,8 @@ module.exports = function follow(server) {
   server.post("/follow", async (req, res) => {
     const body = req.body;
     try {
-      const user = await webfinger(body.follower);
+      const webfinger = new Webfinger(body.follower);
+      const user = await webfinger.query();
       const template = user?.links?.find(
         (link) => link.rel === "http://ostatus.org/schema/1.0/subscribe"
       )?.template;

@@ -16,14 +16,14 @@ class Webfinger {
       throw { message: "NO_USER" };
     }
 
-    if (isUrl(user)) {
+    if (this.isUrl(user)) {
       const userUrl = new URL(user);
       this.user = {
         host: userUrl.hostname,
         scheme: "https://",
         user: `${userUrl.hostname}${userUrl.pathname}`,
       };
-    } else if (user.indexOf("/") > -1 && isUrl(`https://${user}`)) {
+    } else if (user.indexOf("/") > -1 && this.isUrl(`https://${user}`)) {
       const userUrl = new URL(`https://${user}`);
       this.user = {
         host: userUrl.hostname,
@@ -58,7 +58,7 @@ class Webfinger {
       }?resource=${this.user.scheme}${encodeURIComponent(this.user.user)}`;
 
       try {
-        const req = await makeRequest(url, URIs[i].type);
+        const req = await this.makeRequest(url, URIs[i].type);
 
         return req;
       } catch (e) {
@@ -72,13 +72,14 @@ class Webfinger {
 
     throw { message: "REQUEST_ERROR" };
   }
+
   makeRequest(url, responseType, nested = false) {
     return new Promise((resolve, reject) => {
       https
         .get(url, (res) => {
           if (res.statusCode >= 300 && res.statusCode < 400) {
             if (res?.headers?.location) {
-              return resolve(makeRequest(res.headers.location));
+              return resolve(this.makeRequest(res.headers.location));
             } else {
               return reject({
                 message: "FAILED_REDIRECT",
@@ -95,11 +96,11 @@ class Webfinger {
             data += d;
           });
 
-          res.on("end", () => {
-            console.log(res);
+          res.on("end", async () => {
             try {
               if (responseType === XRD_TYPE) {
-                return resolve(xrdToJrd(data, nested));
+                const jrd = await this.xrdToJrd(data, nested);
+                return resolve();
               }
 
               resolve(JSON.parse(data));
@@ -113,6 +114,7 @@ class Webfinger {
         });
     });
   }
+
   async xrdToJrd(xrd, nested) {
     const XML = new XMLParser({
       ignoreAttributes: false,
@@ -125,10 +127,16 @@ class Webfinger {
       throw { message: "INVALID_DATA_FORMAT" };
     }
 
-    return await processXrdElements(XRD, nested);
+    return await this.processXrdElements(XRD, nested);
   }
-  async processXrdElements(elements, nested) {
-    const output = {};
+
+  async processXrdElements(elements, nested = false) {
+    const output = {
+      aliases: [],
+      properties: {},
+      links: [],
+      titles: {},
+    };
     for (let i = 0; i < elements.length; i++) {
       if (elements[i].hasOwnProperty("Subject")) {
         const children = elements[i].Subject;
@@ -143,19 +151,12 @@ class Webfinger {
       } else if (elements[i].hasOwnProperty("Alias")) {
         const children = elements[i].Alias;
 
-        if (!output.aliases) {
-          output.aliases = [];
-        }
         if (children?.[0]?.["#text"]) {
           output.aliases.push(children[0]["#text"]);
         }
       } else if (elements[i].hasOwnProperty("Property")) {
         const children = elements[i].Property;
         const attributes = elements[i][":@"];
-
-        if (!output.properties) {
-          output.properties = {};
-        }
 
         if (attributes?.["@_type"])
           output.properties[attributes["@_type"]] =
@@ -164,15 +165,12 @@ class Webfinger {
         const children = elements[i].Link;
         const attributes = elements[i][":@"];
 
-        if (!output.links) {
-          output.links = [];
-        }
-        if (attributes?.["@_rel"].toLowerCase() === "lrdd" && !nested) {
-          if (!attributes?.["@_template"]) {
+        if (attributes?.["@_rel"].toLowerCase() === "lrdd") {
+          if (!attributes?.["@_template"] || nested) {
             continue;
           }
 
-          const lrdd = await makeRequest(
+          const lrdd = await this.makeRequest(
             attributes["@_template"].replace(
               "{uri}",
               `${this.user.scheme}${this.user.user}`
@@ -180,8 +178,27 @@ class Webfinger {
             attributes["@_type"].toLowerCase() || XRD_TYPE,
             true
           );
+
+          if (lrdd.subject) {
+            output.subject = lrdd.subject;
+          }
+
+          if (lrdd.aliases) {
+            output.aliases.push(...lrdd.aliases);
+          }
+
+          if (lrdd.properties) {
+            Object.keys(lrdd.properties).forEach((key) => {
+              output.properties[key] = lrdd.properties[key];
+            });
+          }
+
+          if (lrdd.links) {
+            output.links.push(...lrdd.links);
+          }
         }
-        const link = children.length > 0 ? processXrdElements(children) : {};
+        const link =
+          children.length > 0 ? this.processXrdElements(children) : {};
 
         Object.keys(attributes).forEach((key) => {
           link[key.slice(2)] = attributes[key];
