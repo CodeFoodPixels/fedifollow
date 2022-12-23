@@ -100,7 +100,7 @@ class Webfinger {
             try {
               if (responseType === XRD_TYPE) {
                 const jrd = await this.xrdToJrd(data, nested);
-                return resolve();
+                return resolve(jrd);
               }
 
               resolve(JSON.parse(data));
